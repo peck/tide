@@ -1,0 +1,38 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+/* This file is for your main application CSS */
+
+body {
+}
+
+.border-ascii:before,
+.border-ascii:after {
+  content: "+----------------------------------+";
+  display: block;
+  white-space: pre;
+}
+
+.border-ascii:before {
+  margin-bottom: -0.25rem;
+}
+
+.border-ascii:after {
+  margin-top: -0.25rem;
+}
+
+.border-ascii .left:before,
+.border-ascii .right:before {
+  content: "|";
+  position: absolute;
+  white-space: pre;
+}
+
+.border-ascii .left:before {
+  left: 0;
+}
+
+.border-ascii .right:before {
+  right: 0;
+}

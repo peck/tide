@@ -1,0 +1,56 @@
+<div class="container mx-auto px-0 lg:px-0 flex justify-center min-h-screen dark:bg-slate-800 dark:text-white bg-white text-slate-900 py-5">
+  <div class="max-w-screen-lg w-full lg:w-1/4 text-center">
+
+    <div class="grid grid-cols-4">
+      <div class="col-span-1">
+        <.link href={~p"/#{@station.id}?date=#{Date.add(@current_time, -1) |> Calendar.strftime("%Y-%m-%d")}"}>
+        <h1 class="text-base whitespace-nowrap">&lt; <%= Date.add(@current_time, -1) |> Calendar.strftime("%B %-d")%></h1>
+        </.link>
+      </div>
+      <div class="col-span-2">
+        <h1 class="text-base font-semibold whitespace-nowrap"><%= Calendar.strftime(@current_time, "%A, %B %-d")%></h1>
+      </div>
+      <div class="col-span-1">
+        <.link href={~p"/#{@station.id}?date=#{Date.add(@current_time, +1) |> Calendar.strftime("%Y-%m-%d")}"}>
+        <h1 class="text-base whitespace-nowrap"><%= Date.add(@current_time, +1) |> Calendar.strftime("%B %-d")%> &gt;</h1>
+        </.link>
+      </div>
+    </div>
+
+    <%= for {prediction, index} <- Stream.with_index(@predictions) do %>
+        <%= if index != 0 do %>
+        <span class="text-xs">then</span>
+        <% end %>
+        <p class="text-lg"><%= if Map.get(prediction, "type") == "H", do: "Less beach", else: "More beach" %> until <%= Calendar.strftime(prediction["t_truncated"], "%-I:%M %P") %> </p>
+        <% end %>
+        <hr class="my-5"/>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <div>
+              Sunrise: <%= Calendar.strftime(@sunrise_time, "%-I:%M %P") %>
+            </div>
+            <div>
+              Sunset: <%= Calendar.strftime(@sunset_time, "%-I:%M %P") %>
+            </div>
+          </div>
+          <div>
+            <%= if @moonrise_time != nil do %>
+            <div>
+              Moonrise: <%= Calendar.strftime(@moonrise_time, "%-I:%M %P") %>
+            </div>
+            <% end %>
+
+            <%= if @moonset_time != nil do %>
+            <div>
+              Moonset: <%= Calendar.strftime(@moonset_time, "%-I:%M %P") %>
+            </div>
+            <% end %>
+          </div>
+        </div>
+        <hr class="my-5"/>
+        <p class="text-sm">
+          <%= String.split(@station.name) |> Enum.map(&String.capitalize/1) |> Enum.join(" ") %>
+</p>
+
+</div>
+</div>
