@@ -11,7 +11,7 @@ defmodule Tide.Application do
       # Start the Telemetry supervisor
       TideWeb.Telemetry,
       #Start the TZWorld backend
-      TzWorld.Backend.EtsWithIndexCache,
+      #TzWorld.Backend.EtsWithIndexCache,
       # Start the Ecto repository
       Tide.Repo,
       # Start the PubSub system

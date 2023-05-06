@@ -29,7 +29,7 @@ defmodule TideWeb.PageController do
 
   def home(conn, params = %{"station_id" => station_id}) do
     station = Tide.Repo.get_by(Tide.Station, id: station_id)
-    local_time = DateTime.now!("Etc/UTC")
+    local_time = DateTime.now!(station.time_zone_name)
     {:ok, %{predictions: predictions, station: station, events: events}} = Tide.get_tide_by_station(station, local_time)
 
     next_tide_time = predictions
@@ -50,7 +50,7 @@ defmodule TideWeb.PageController do
     |> assign(:sunset_time, events[:sunset])
     |> assign(:moonrise_time, events[:moonrise])
     |> assign(:moonset_time, events[:moonset])
-    |> render(:today, layout: false)
+    |> render(:not_today, layout: false)
   end
 
   #if we're not given anything, find something

@@ -90,6 +90,8 @@ defmodule TideWeb do
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS
 
+      import TideWeb.Helpers.ViewHelpers
+
       # Routes generation with the ~p sigil
       unquote(verified_routes())
     end

@@ -17,15 +17,15 @@ defmodule Tide do
          {:ok, events} <- get_astronomy_times(station.latitude, station.longitude, date) do
       #localize the predictions
 
-      predictions = Enum.map(predictions, fn(x) ->
-        {_old, new} = Map.get_and_update(x, "t",
-        fn(t) -> {t, DateTime.shift_zone!(t, station.time_zone_name)} end
-      )
-        {_old, new} = Map.get_and_update(new, "t_truncated",
-          fn(t) -> {t, DateTime.shift_zone!(t, station.time_zone_name)} end
-        )
-        new
-      end)
+      #predictions = Enum.map(predictions, fn(x) ->
+      #  {_old, new} = Map.get_and_update(x, "t",
+      #  fn(t) -> {t, DateTime.shift_zone!(t, station.time_zone_name)} end
+      #)
+      #  {_old, new} = Map.get_and_update(new, "t_truncated",
+      #    fn(t) -> {t, DateTime.shift_zone!(t, station.time_zone_name)} end
+      #  )
+      #  new
+      #end)
 
       events = Enum.map(events, fn({event, utc_time}) ->
         {event, DateTime.shift_zone!(utc_time, station.time_zone_name)}
@@ -46,14 +46,14 @@ defmodule Tide do
     station = Tide.Repo.get_by(Tide.Station, id: station_id)
     url = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter"
     params = %{
-      "begin_date" => Calendar.strftime(date_time, "%Y%m%d %H:%M"),
-      "end_date" => DateTime.add(date_time, 24, :hour) |> Calendar.strftime("%Y%m%d %H:%M"),
+      "begin_date" => Calendar.strftime(date_time, "%Y%m%d"),
+      "end_date" => Calendar.strftime(date_time, "%Y%m%d"),
       "station" => station.id,
       "product" => "predictions",
       "datum" => "MLLW",
       "interval" => "hilo",
       "units" => "english",
-      "time_zone" => "gmt",
+      "time_zone" => "lst_ldt",
       "format" => "json"
     } |> URI.encode_query
 

@@ -4,7 +4,7 @@
     <div class="grid grid-cols-4">
       <div class="col-span-1">
         <.link href={~p"/#{@station.id}?date=#{Date.add(@current_time, -1) |> Calendar.strftime("%Y-%m-%d")}"}>
-        <h1 class="text-base whitespace-nowrap">&lt; <%= Date.add(@current_time, -1) |> Calendar.strftime("%B %-d")%></h1>
+          <h1 class="text-base whitespace-nowrap">&lt; <%= Date.add(@current_time, -1) |> Calendar.strftime("%B %-d")%></h1>
         </.link>
       </div>
       <div class="col-span-2">
@@ -12,7 +12,7 @@
       </div>
       <div class="col-span-1">
         <.link href={~p"/#{@station.id}?date=#{Date.add(@current_time, +1) |> Calendar.strftime("%Y-%m-%d")}"}>
-        <h1 class="text-base whitespace-nowrap"><%= Date.add(@current_time, +1) |> Calendar.strftime("%B %-d")%> &gt;</h1>
+          <h1 class="text-base whitespace-nowrap"><%= Date.add(@current_time, +1) |> Calendar.strftime("%B %-d")%> &gt;</h1>
         </.link>
       </div>
     </div>
@@ -50,6 +50,5 @@
         <p class="text-sm">
           <%= String.split(@station.name) |> Enum.map(&String.capitalize/1) |> Enum.join(" ") %>
 </p>
-
 </div>
 </div>
