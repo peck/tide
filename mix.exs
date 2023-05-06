@@ -53,7 +53,8 @@ defmodule Tide.MixProject do
       {:tz, "~> 0.25.1"},
       {:timex, "~> 3.0"},
       {:mox, "~> 1.0", only: :test},
-      {:tz_world, "~> 1.3"}
+      {:tz_world, "~> 1.3"},
+      {:cachex, "~> 3.6"}
     ]
 end
 

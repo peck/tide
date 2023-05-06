@@ -1,6 +1,10 @@
 <div class="container mx-auto px-0 lg:px-0 flex justify-center min-h-screen dark:bg-slate-800 dark:text-white bg-white text-slate-900 py-5">
-  <div class="max-w-screen-lg w-full lg:w-1/4 text-center">
-    <div class="grid grid-cols-4 py-5">
+  <div class="max-w-screen-lg w-full lg:w-1/4 text-center flex flex-col">
+  <div class="flex-grow">
+    <div class="text-left">
+      <p class="text-base">plaintexttides.com</p>
+      </div>
+    <div class="grid grid-cols-4 my-5">
       <div class="col-span-1">
         <.link href={~p"/#{@station.id}?date=#{Date.add(@current_time, -1) |> Calendar.strftime("%Y-%m-%d")}"}>
         <h1 class="text-base whitespace-nowrap">&lt; <%= Date.add(@current_time, -1) |> Calendar.strftime("%B %-d")%></h1>
@@ -20,36 +24,48 @@
         <%= if index != 0 do %>
         <span class="text-xs">then</span>
         <% end %>
-        <p class="text-lg"><%= if Map.get(prediction, "type") == "H", do: "↑", else: "↓" %> <%= Calendar.strftime(prediction["t"], "%-I:%M %P") %> </p>
+        <p class="text-lg"><%= if Map.get(prediction, "type") == "H", do: "↑", else: "↓" %> <%= Calendar.strftime(prediction["t"], "%-I:%M%P") |> String.trim_trailing("m") %> </p>
         <% end %>
         <hr class="my-5"/>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <div>
-              Sunrise: <%= Calendar.strftime(@sunrise_time, "%-I:%M %P") %>
+            <div class="whitespace-nowrap">
+              Sunrise: <%= Calendar.strftime(@sunrise_time, "%-I:%M%P") |> String.trim_trailing("m") %>
             </div>
-            <div>
-              Sunset: <%= Calendar.strftime(@sunset_time, "%-I:%M %P") %>
+            <div class="whitespace-nowrap">
+              Sunset: <%= Calendar.strftime(@sunset_time, "%-I:%M%P") |> String.trim_trailing("m") %>
             </div>
           </div>
           <div>
-            <%= if @moonrise_time != nil do %>
-            <div>
-              Moonrise: <%= Calendar.strftime(@moonrise_time, "%-I:%M %P") %>
+            <%= if @moonset_time != nil do %>
+            <div class="whitespace-nowrap">
+              Moonset: <%= Calendar.strftime(@moonset_time, "%-I:%M%P") |> String.trim_trailing("m") %>
             </div>
             <% end %>
 
-            <%= if @moonset_time != nil do %>
-            <div>
-              Moonset: <%= Calendar.strftime(@moonset_time, "%-I:%M %P") %>
+            <%= if @moonrise_time != nil do %>
+            <div class="whitespace-nowrap">
+              Moonrise: <%= Calendar.strftime(@moonrise_time, "%-I:%M%P") |> String.trim_trailing("m") %>
             </div>
             <% end %>
+
           </div>
         </div>
         <hr class="my-5"/>
-        <p class="text-sm">
+        <p class="text-sm whitespace-nowrap">
           <%= String.split(@station.name) |> Enum.map(&String.capitalize/1) |> Enum.join(" ") %>
 </p>
+        <p class="text-sm">
+          <%= decimal_degrees_to_dms(@station.latitude, :latitude) %>, <%= decimal_degrees_to_dms(@station.longitude, :longitude) %>
+          </p>
 
+</div>
+  <div class="footer">
+    <p class="text-sm">
+        <.link href={~p"/stations"}>
+      Tide Stations
+      </.link>
+    </p>
+  </div>
 </div>
 </div>

@@ -1,9 +1,11 @@
-<div class="container mx-auto px-4 lg:px-0 flex justify-center min-h-screen dark:bg-slate-800 dark:text-white bg-white text-slate-900 py-5">
+<div class="container mx-auto px-0 lg:px-0 flex justify-center dark:bg-slate-800 dark:text-white bg-white text-slate-900">
   <div class="max-w-screen-lg w-full lg:w-1/4 text-center">
+        <h1 class="text-base font-semibold whitespace-nowrap">Tide Prediction Stations</h1>
+
     <%= for {station, index} <- Stream.with_index(@stations) do %>
         <.link href={~p"/#{station.id}"}>
-        <p class="text-sm">
-          <%= String.split(station.name) |> Enum.map(&String.capitalize/1) |> Enum.join(" ") %>
+          <p class="text-sm whitespace-nowrap">
+            <%= String.split(station.name) |> Enum.map(&String.capitalize/1) |> Enum.join(" ") %>
 </p>
 </.link>
 <% end %>

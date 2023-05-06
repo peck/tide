@@ -1,5 +1,6 @@
 defmodule Tide do
   require Finch
+  require Logger
   import Ecto.Query
 
   @doc """
@@ -60,18 +61,19 @@ defmodule Tide do
     uri = URI.parse(url)
 
     uri = %{uri | query: params}
-
-    req = Finch.build(:get, uri)
-
-    case Finch.request(req, Tide.Finch) do
-      {:ok, %{status: 200, body: body}} ->
-        predictions = body |> Jason.decode!() |> Map.get("predictions") |> Enum.map(&parse_prediction(&1))
-        {:ok, predictions}
-      {:ok, %{status: code, body: body}} ->
-        {:error, "HTTP error #{code}: #{body}"}
-      {:error, reason} ->
-        {:error, "HTTP error: #{reason}"}
-    end
+    {_cachex_result, res} = Cachex.fetch(:prediction_cache, uri, fn(uri) ->
+        req = Finch.build(:get, uri)
+        case Finch.request(req, Tide.Finch) do
+          {:ok, %{status: 200, body: body}} ->
+            predictions = body |> Jason.decode!() |> Map.get("predictions") |> Enum.map(&parse_prediction(&1))
+            {:ok, predictions}
+          {:ok, %{status: code, body: body}} ->
+            {:error, "HTTP error #{code}: #{body}"}
+          {:error, reason} ->
+            {:error, "HTTP error: #{reason}"}
+        end
+    end)
+    res
   end
 
   def get_nearest_station(latitude, longitude) do
@@ -97,7 +99,7 @@ defmodule Tide do
   end
 
   def datetime_at_station(station = %Tide.Station{}) do
-   DateTime.now!(station.time_zone_name)
+    DateTime.now!(station.time_zone_name)
   end
 
   def get_stations() do
@@ -134,6 +136,7 @@ defmodule Tide do
 
     uri = %{uri | query: params}
 
+    {_cachex_result, res} = Cachex.fetch(:prediction_cache, uri, fn(uri) ->
     req = Finch.build(:get, uri)
 
     case Finch.request(req, Tide.Finch) do
@@ -151,6 +154,8 @@ defmodule Tide do
       {:error, reason} ->
         {:error, "HTTP error: #{reason}"}
     end
+    end)
+    res
   end
 
   # Parse the sunrise, sunset, moonrise, and moonset times and convert to DateTime
@@ -161,10 +166,8 @@ defmodule Tide do
       moonrise: get_in(response, ["properties", "data", "moondata"]) |> Enum.find(%{}, fn x -> x["phen"] == "Rise" end) |> Map.get("time"),
       moonset: get_in(response, ["properties", "data", "moondata"]) |> Enum.find(%{}, fn x -> x["phen"] == "Set" end) |> Map.get("time"),
     }
-    |> IO.inspect
     |> Enum.reject(fn {_key, value} -> value == nil end)
     |> Enum.into(%{})
-    |> IO.inspect
   end
 
   def get_sun_times(latitude, longitude, date) do

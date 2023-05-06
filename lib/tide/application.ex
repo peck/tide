@@ -18,8 +18,10 @@ defmodule Tide.Application do
       {Phoenix.PubSub, name: Tide.PubSub},
       # Start Finch
       {Finch, name: Tide.Finch},
+      #Start the Cache
+      {Cachex, name: :prediction_cache, limit: 1000},
       # Start the Endpoint (http/https)
-      TideWeb.Endpoint
+      TideWeb.Endpoint,
       # Start a worker by calling: Tide.Worker.start_link(arg)
       # {Tide.Worker, arg}
     ]

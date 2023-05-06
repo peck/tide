@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
+    <meta name="description" content="Access accurate, plaintext tide information for all NOAA tide stations with our fast and user-friendly website. Stay informed about current tide levels and plan your coastal activities with ease.">
     <.live_title suffix=" · Phoenix Framework">
       <%= assigns[:page_title] || "Tide" %>
     </.live_title>
@@ -11,7 +12,7 @@
     <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
     </script>
   </head>
-  <body class="antialiased flex items-center justify-center h-screen">
+  <body class="antialiased">
     <%= @inner_content %>
   </body>
 </html>
