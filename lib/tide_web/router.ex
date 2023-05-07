@@ -19,8 +19,8 @@ defmodule TideWeb.Router do
     get "/stations", PageController, :stations
     live "/:station_id", TideLive
     live "/:station_id/:date", TideLive
-    #get "/:station_id", PageController, :home
-    #get "/", PageController, :home
+    # get "/:station_id", PageController, :home
+    # get "/", PageController, :home
   end
 
   # Other scopes may use custom stacks.

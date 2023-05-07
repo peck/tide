@@ -10,18 +10,18 @@ defmodule Tide.Application do
     children = [
       # Start the Telemetry supervisor
       TideWeb.Telemetry,
-      #Start the TZWorld backend
-      #TzWorld.Backend.EtsWithIndexCache,
+      # Start the TZWorld backend
+      # TzWorld.Backend.EtsWithIndexCache,
       # Start the Ecto repository
       Tide.Repo,
       # Start the PubSub system
       {Phoenix.PubSub, name: Tide.PubSub},
       # Start Finch
       {Finch, name: Tide.Finch},
-      #Start the Cache
+      # Start the Cache
       {Cachex, name: :prediction_cache, limit: 1000},
       # Start the Endpoint (http/https)
-      TideWeb.Endpoint,
+      TideWeb.Endpoint
       # Start a worker by calling: Tide.Worker.start_link(arg)
       # {Tide.Worker, arg}
     ]
