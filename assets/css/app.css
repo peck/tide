@@ -9,5 +9,12 @@ body {
 }
 
 a {
-  @apply text-blue-600;
+    @apply text-blue-600;
+}
+
+@media (prefers-color-scheme: dark) {
+a {
+    @apply text-blue-300;
+
+}
 }

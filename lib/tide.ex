@@ -15,18 +15,7 @@ defmodule Tide do
 
   def get_tide_by_station(station = %Tide.Station{}, date) do
     with {:ok, predictions} <- tide_predictions(station.id, date),
-         {:ok, events} <- get_astronomy_times(station.latitude, station.longitude, date) do
-      #localize the predictions
-
-      #predictions = Enum.map(predictions, fn(x) ->
-      #  {_old, new} = Map.get_and_update(x, "t",
-      #  fn(t) -> {t, DateTime.shift_zone!(t, station.time_zone_name)} end
-      #)
-      #  {_old, new} = Map.get_and_update(new, "t_truncated",
-      #    fn(t) -> {t, DateTime.shift_zone!(t, station.time_zone_name)} end
-      #  )
-      #  new
-      #end)
+         {:ok, events} <- get_astronomy(station.latitude, station.longitude, date) do
 
       events = Enum.map(events, fn({event, utc_time}) ->
         {event, DateTime.shift_zone!(utc_time, station.time_zone_name)}
@@ -61,19 +50,19 @@ defmodule Tide do
     uri = URI.parse(url)
 
     uri = %{uri | query: params}
-    {_cachex_result, res} = Cachex.fetch(:prediction_cache, uri, fn(uri) ->
-        req = Finch.build(:get, uri)
-        case Finch.request(req, Tide.Finch) do
-          {:ok, %{status: 200, body: body}} ->
-            predictions = body |> Jason.decode!() |> Map.get("predictions") |> Enum.map(&parse_prediction(&1))
-            {:ok, predictions}
-          {:ok, %{status: code, body: body}} ->
-            {:error, "HTTP error #{code}: #{body}"}
-          {:error, reason} ->
-            {:error, "HTTP error: #{reason}"}
-        end
+  {_cachex_result, res} = Cachex.fetch(:prediction_cache, uri, fn(uri) ->
+      req = Finch.build(:get, uri)
+      case Finch.request(req, Tide.Finch) do
+        {:ok, %{status: 200, body: body}} ->
+          predictions = body |> Jason.decode!() |> Map.get("predictions") |> Enum.map(&parse_prediction(&1))
+          {:commit, {:ok, predictions}}
+        {:ok, %{status: code, body: body}} ->
+          {:ignore, {:error, "HTTP error #{code}: #{body}"}}
+        {:error, reason} ->
+          {:ignore, {:error, "HTTP error: #{reason}"}}
+      end
     end)
-    res
+  res
   end
 
   def get_nearest_station(latitude, longitude) do
@@ -125,7 +114,7 @@ defmodule Tide do
     end
   end
 
-  def get_astronomy_times(latitude, longitude, date) do
+  def get_astronomy(latitude, longitude, date) do
     url = "https://aa.usno.navy.mil/api/rstt/oneday"
     params = %{
       "date" => Calendar.strftime(date, "%Y-%m-%d"),
@@ -136,30 +125,30 @@ defmodule Tide do
 
     uri = %{uri | query: params}
 
-    {_cachex_result, res} = Cachex.fetch(:prediction_cache, uri, fn(uri) ->
-    req = Finch.build(:get, uri)
+  {_cachex_result, res} = Cachex.fetch(:prediction_cache, uri, fn(uri) ->
+      req = Finch.build(:get, uri)
 
-    case Finch.request(req, Tide.Finch) do
-      {:ok, %{status: 200, body: body}} ->
-        res = body |> Jason.decode!() |> parse_astronomy_times
-        events = for {key, value} <- res do
-          datetime_str = "#{Calendar.strftime(date, "%Y-%m-%d")}T#{value}:00Z"
-          {:ok, datetime, _} = DateTime.from_iso8601(datetime_str)
-          {key, datetime}
-        end
-        |> Map.new
-        {:ok, events}
-      {:ok, %{status: code, body: body}} ->
-        {:error, "HTTP error #{code}: #{body}"}
-      {:error, reason} ->
-        {:error, "HTTP error: #{reason}"}
-    end
+      case Finch.request(req, Tide.Finch) do
+        {:ok, %{status: 200, body: body}} ->
+          res = body |> Jason.decode!() |> parse_astronomy
+          events = for {key, value} <- res do
+            datetime_str = "#{Calendar.strftime(date, "%Y-%m-%d")}T#{value}:00Z"
+            {:ok, datetime, _} = DateTime.from_iso8601(datetime_str)
+            {key, datetime}
+          end
+          |> Map.new
+          {:commit, {:ok, events}}
+        {:ok, %{status: code, body: body}} ->
+          {:ignore, {:error, "HTTP error #{code}: #{body}"}}
+        {:error, reason} ->
+          {:ignore, {:error, "HTTP error: #{reason}"}}
+      end
     end)
-    res
+  res
   end
 
   # Parse the sunrise, sunset, moonrise, and moonset times and convert to DateTime
-  defp parse_astronomy_times(response) do
+  defp parse_astronomy(response) do
     %{
       sunrise: get_in(response, ["properties", "data", "sundata"]) |> Enum.find(fn x -> x["phen"] == "Rise" end) |> Map.get("time"),
       sunset: get_in(response, ["properties", "data", "sundata"]) |> Enum.find(fn x -> x["phen"] == "Set" end) |> Map.get("time"),
@@ -170,32 +159,6 @@ defmodule Tide do
     |> Enum.into(%{})
   end
 
-  def get_sun_times(latitude, longitude, date) do
-    url = "https://api.sunrise-sunset.org/json"
-    params = %{
-      "lat" => latitude,
-      "lng" => longitude,
-      "date" => date,
-      "formatted" => 0
-    } |> URI.encode_query
-    uri = URI.parse(url)
-
-    uri = %{uri | query: params}
-
-    req = Finch.build(:get, uri)
-
-    case Finch.request(req, Tide.Finch) do
-      {:ok, %{status: 200, body: body}} ->
-        res = body |> Jason.decode!() |> Map.get("results") |> parse_sun_time
-        {:ok, %{sunrise_time: res["sunrise_time"], sunset_time: res["sunset_time"]}}
-      {:ok, %{status: code, body: body}} ->
-        {:error, "HTTP error #{code}: #{body}"}
-      {:error, reason} ->
-        {:error, "HTTP error: #{reason}"}
-    end
-
-  end
-
   defp parse_station(station) do
     %{
       "id" => station["id"],
@@ -203,13 +166,6 @@ defmodule Tide do
       "longitude" => station["lng"],
       "name" => station["name"],
       "time_zone_correction" => station["timezonecorr"]
-    }
-  end
-
-  defp parse_sun_time(sun_time) do
-    %{
-      "sunrise_time" => sun_time["sunrise"],
-      "sunset_time" => sun_time["sunset"],
     }
   end
 

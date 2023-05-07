@@ -3,7 +3,7 @@
         <h1 class="text-base font-semibold whitespace-nowrap">Tide Prediction Stations</h1>
 
     <%= for {station, index} <- Stream.with_index(@stations) do %>
-        <.link href={~p"/#{station.id}"}>
+        <.link href={~p"/#{station.id}/today"}>
           <p class="text-sm whitespace-nowrap">
             <%= String.split(station.name) |> Enum.map(&String.capitalize/1) |> Enum.join(" ") %>
 </p>
