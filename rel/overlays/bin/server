@@ -1,0 +1,10 @@
+#!/bin/sh
+
+tailscaled --tun=userspace-networking &
+
+su - nobody
+
+tailscale up --ssh --authkey=${TAILSCALE_AUTHKEY}
+
+cd -P -- "$(dirname -- "$0")"
+PHX_SERVER=true exec ./tide start

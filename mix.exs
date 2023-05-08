@@ -9,8 +9,21 @@ defmodule Tide.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
     ]
+  end
+
+    defp releases do
+    [
+      tide: [
+        steps: [:assemble, &run_ecto_setup/1, :tar]
+      ]
+    ]
+  end
+
+  defp run_ecto_setup(release) do
+    Mix.Task.run("ecto.setup")
+    release
   end
 
   # Configuration for the OTP application.

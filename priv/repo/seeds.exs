@@ -9,3 +9,6 @@
 #
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
+
+{:ok, tz_world_pid} = TzWorld.Backend.EtsWithIndexCache.start_link()
+Tide.populate_stations

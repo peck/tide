@@ -10,6 +10,11 @@ import Config
 config :tide,
   ecto_repos: [Tide.Repo]
 
+config :tide, Tide.Repo,
+  database: Path.expand("../priv/tide.db", Path.dirname(__ENV__.file)),
+  pool_size: 10,
+  journal_mode: :off
+
 # Configures the endpoint
 config :tide, TideWeb.Endpoint,
   url: [host: "localhost"],

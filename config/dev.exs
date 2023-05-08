@@ -1,11 +1,11 @@
 import Config
 
 # Configure your database
-config :tide, Tide.Repo,
-  database: Path.expand("../tide_dev.db", Path.dirname(__ENV__.file)),
-  pool_size: 5,
-  stacktrace: true,
-  show_sensitive_data_on_connection_error: true
+#config :tide, Tide.Repo,
+#  database: Path.expand("../prive/tide_dev.db", Path.dirname(__ENV__.file)),
+#  pool_size: 5,
+#  stacktrace: true,
+#  show_sensitive_data_on_connection_error: true
 
 # For development, we disable any cache and enable
 # debugging and code reloading.
