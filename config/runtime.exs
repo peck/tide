@@ -28,9 +28,11 @@ if config_env() == :prod do
   #    For example: /etc/tide/tide.db
   #    """
 
-  #config :tide, Tide.Repo,
-  #  database: database_path,
-  #  pool_size: String.to_integer(System.get_env("POOL_SIZE") || "5")
+  config :tide, Tide.Repo,
+    database: Path.join(:code.priv_dir(:tide), "tide.db"),
+    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "5")
+
+  config :geoip, provider: :ipinfo, api_key: System.get_env("IP_INFO_IO_TOKEN")
 
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you

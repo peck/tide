@@ -40,6 +40,7 @@ defmodule TideWeb.TideLive do
       |> assign(:sunset_time, events[:sunset])
       |> assign(:moonrise_time, events[:moonrise])
       |> assign(:moonset_time, events[:moonset])
+      |> assign(:page_title, station.name)
       |> assign(:location, nil)
 
     {:ok, socket}
@@ -89,7 +90,7 @@ defmodule TideWeb.TideLive do
       |> assign(:sunset_time, events[:sunset])
       |> assign(:moonrise_time, events[:moonrise])
       |> assign(:moonset_time, events[:moonset])
-      |> assign(:moonphase, events[:moonphase])
+      |> assign(:page_title, station.name)
       |> assign(:location, nil)
 
     {:noreply, socket}
@@ -137,12 +138,7 @@ defmodule TideWeb.TideLive do
 
           <div class="grid grid-cols-2">
             <div>
-              <p class="text-left text-sm whitespace-pre-line">
-                <%= String.split(@station.name)
-                |> Enum.map(&String.capitalize/1)
-                |> Enum.join(" ")
-                |> String.replace(", ", ",\n") %>
-              </p>
+              <p class="text-left text-sm whitespace-pre-line"><%= String.split(@station.name) |> Enum.map(&String.capitalize/1) |> Enum.join(" ") |> String.replace(", ", ",\n") %></p>
             </div>
             <div class="text-sm text-right">
               <%= decimal_degrees_to_dms(@station.latitude, :latitude) %>

@@ -74,3 +74,5 @@ config :phoenix, :plug_init_mode, :runtime
 
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
+
+config :geoip, provider: :ipinfo, api_key: System.get_env("IP_INFO_IO_TOKEN")

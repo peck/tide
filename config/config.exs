@@ -7,11 +7,8 @@
 # General application configuration
 import Config
 
-config :tide,
-  ecto_repos: [Tide.Repo]
-
 config :tide, Tide.Repo,
-  database: Path.expand("../priv/tide.db", Path.dirname(__ENV__.file)),
+  database: "priv/tide.db",
   pool_size: 10,
   journal_mode: :off
 
