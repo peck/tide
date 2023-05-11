@@ -40,7 +40,7 @@ defmodule Tide do
     params =
       %{
         "begin_date" => Calendar.strftime(date_time, "%Y%m%d"),
-        "end_date" => Calendar.strftime(date_time, "%Y%m%d"),
+        "end_date" => DateTime.add(date_time, 365, :day) |> Calendar.strftime("%Y%m%d"),
         "station" => station.id,
         "product" => "predictions",
         "datum" => "MLLW",
@@ -234,5 +234,22 @@ defmodule Tide do
       "v" => prediction["v"],
       "type" => prediction["type"]
     }
+  end
+
+  def encode_to_csv(tide_data, file_path) do
+    # Convert the tide data to a list of lists (i.e., rows of CSV data)
+    csv_data = 
+      tide_data 
+      |> Enum.map(fn %{"t" => datetime, "type" => tide_type, "v" => level} -> 
+        [DateTime.to_string(datetime), tide_type, level] 
+      end)
+
+    # Add header row
+    csv_data = [["datetime", "tide_type", "level"]] ++ csv_data
+
+    {:ok, file} = File.open(file_path, [:write])
+    encoded_data = CSV.encode(csv_data)
+    Enum.each(encoded_data, &IO.write(file, &1))
+    File.close(file)
   end
 end

@@ -56,7 +56,8 @@ defmodule Tide.MixProject do
       {:tz_world, "~> 1.3"},
       {:cachex, "~> 3.6"},
       {:remote_ip, "~> 1.1"},
-      {:geoip, "~> 0.2"}
+      {:geoip, "~> 0.2"},
+      {:csv, "~> 3.0"}
     ]
   end
 

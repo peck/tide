@@ -9,9 +9,12 @@ defmodule TideWeb.PageController do
       |> to_string
       |> GeoIP.lookup()
 
-    Logger.info(IO.inspect(geo_response, label: "GEO_RESPONSE"))
-
-    [latitude, longitude] = geo_response[:loc] |> String.split(",")
+    [latitude, longitude] = case geo_response[:loc] do
+                              nil ->
+                                [39.8282, -98.5795]
+                              _ ->
+                                geo_response[:loc] |> String.split(",")
+                            end
 
     {:ok, station} = Tide.get_nearest_station(latitude, longitude)
 
@@ -25,9 +28,14 @@ defmodule TideWeb.PageController do
       |> to_string
       |> GeoIP.lookup()
 
-    [latitude, longitude] = geo_response[:loc] |> String.split(",")
+    [latitude, longitude] = case geo_response[:loc] do
+                              nil ->
+                                [39.8282, -98.5795]
+                              _ ->
+                                geo_response[:loc] |> String.split(",")
+                            end
 
-    stations = Tide.Station.get_stations(%{latitude: latitude, longitude: longitude})
+    {:ok, stations} = Tide.Station.get_stations_by_distance(latitude, longitude)
 
     conn
     |> assign(:stations, stations)
@@ -40,18 +48,4 @@ defmodule TideWeb.PageController do
     end)
   end
 
-    defp ip_to_string(ip_tuple) when is_tuple(ip_tuple) do
-    case tuple_size(ip_tuple) do
-      4 ->
-        # IPv4
-        :inet.ntoa(ip_tuple) |> to_string()
-
-      8 ->
-        # IPv6
-        :inet.ntop(:inet6, ip_tuple) |> to_string()
-
-      _ ->
-        raise ArgumentError, message: "Invalid IP tuple"
-    end
-  end
 end

@@ -7,13 +7,38 @@
     <meta
       name="description"
       content="Access accurate, plaintext tide information for all NOAA tide stations with our fast and user-friendly website. Stay informed about current tide levels and plan your coastal activities with ease."
-    />
+      />
+    <meta content="website" property="og:type">
+    <meta content="https://plaintexttides.com" property="og:url">
+    <meta content="Plain Text Tides" property="og:title">
+    <meta content="Access accurate, plaintext tide information for all NOAA tide stations with our fast and user-friendly website. Stay informed about current tide levels and plan your coastal activities with ease." property="og:description">
+    <meta content="https://plaintexttides.com/favicons/favicon-310.png" property="og:image">
     <.live_title>
       <%= assigns[:page_title] || "PlainTextTides.com" %>
     </.live_title>
     <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
     <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
     </script>
+    <link rel="shortcut icon" href="favicons/favicon.ico">
+    <link rel="icon" sizes="16x16 32x32 64x64" href="favicons/favicon.ico">
+    <link rel="icon" type="image/png" sizes="196x196" href="favicons/favicon-192.png">
+    <link rel="icon" type="image/png" sizes="160x160" href="favicons/favicon-160.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="favicons/favicon-96.png">
+    <link rel="icon" type="image/png" sizes="64x64" href="favicons/favicon-64.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicons/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicons/favicon-16.png">
+    <link rel="apple-touch-icon" href="favicons/favicon-57.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="favicons/favicon-114.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="favicons/favicon-72.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="favicons/favicon-144.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="favicons/favicon-60.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="favicons/favicon-120.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="favicons/favicon-76.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="favicons/favicon-152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicons/favicon-180.png">
+    <meta name="msapplication-TileColor" content="#FFFFFF">
+    <meta name="msapplication-TileImage" content="favicons/favicon-144.png">
+    <meta name="msapplication-config" content="favicons/browserconfig.xml">
   </head>
   <body class="antialiased">
     <%= @inner_content %>

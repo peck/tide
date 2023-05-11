@@ -1,4 +1,16 @@
 defmodule TideWeb.Helpers.ViewHelpers do
+    @miles_per_meter 0.000621371
+
+  def meters_to_miles(meters) do
+    # Convert meters to miles
+    miles = @miles_per_meter * meters
+
+    # Truncate to 1 decimal place
+    truncated_miles = Float.round(miles, 1)
+
+    truncated_miles
+  end
+
   def decimal_degrees_to_dms(decimal_degrees, latitude_or_longitude) do
     degrees = Float.floor(decimal_degrees) |> trunc
     minutes_decimal = abs(decimal_degrees - degrees) * 60.0
