@@ -18,7 +18,7 @@ defmodule TideWeb.PageController do
 
     {:ok, station} = Tide.get_nearest_station(latitude, longitude)
 
-    redirect(conn, to: ~p"/#{station.id}")
+    redirect(conn, to: ~p"/stations/#{station.id}")
   end
 
   def stations(conn, _params = %{}) do
@@ -40,12 +40,6 @@ defmodule TideWeb.PageController do
     conn
     |> assign(:stations, stations)
     |> render(:stations, layout: false)
-  end
-
-  defp set_default_params(params, defaults) do
-    Enum.reduce(defaults, params, fn {key, default_value}, acc ->
-      Map.put_new(acc, key, default_value)
-    end)
   end
 
 end

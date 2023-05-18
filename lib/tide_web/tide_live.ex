@@ -23,7 +23,7 @@ defmodule TideWeb.TideLive do
     {:ok, %{predictions: predictions, station: station, events: events}} =
       Tide.get_tide_by_station(station, date)
 
-    # warm cache
+    # warm cache, should just be astronomy but its fine for now until I break that out
     Task.start(fn ->
       next_date = Date.add(date, -1)
       Tide.get_tide_by_station(station, next_date)
@@ -31,9 +31,11 @@ defmodule TideWeb.TideLive do
       Tide.get_tide_by_station(station, prev_date)
     end)
 
+    {[yesterday_prediction | todays_predictions], tomorrow_prediction} = Enum.sort(predictions, &(DateTime.compare(&1.timestamp, &2.timestamp) != :gt)) |> Enum.split(-1);
+
     socket =
       socket
-      |> assign(:predictions, predictions)
+      |> assign(:predictions, todays_predictions)
       |> assign(:station, station)
       |> assign(:current_time, date)
       |> assign(:sunrise_time, events[:sunrise])
@@ -81,9 +83,11 @@ defmodule TideWeb.TideLive do
       Tide.get_tide_by_station(station, prev_date)
     end)
 
+    {[yesterday_prediction | todays_predictions], tomorrow_prediction} = Enum.sort(predictions, &(DateTime.compare(&1.timestamp, &2.timestamp) != :gt)) |> Enum.split(-1);
+
     socket =
       socket
-      |> assign(:predictions, predictions)
+      |> assign(:predictions, todays_predictions)
       |> assign(:station, station)
       |> assign(:current_time, date)
       |> assign(:sunrise_time, events[:sunrise])
@@ -153,8 +157,8 @@ defmodule TideWeb.TideLive do
               <span class="text-xs">then</span>
             <% end %>
             <p class="text-lg">
-              <%= if Map.get(prediction, "type") == "H", do: "↑", else: "↓" %> <%= Calendar.strftime(
-                prediction["t"],
+              <%= if Map.get(prediction, :type) == "H", do: "↑", else: "↓" %> <%= Calendar.strftime(
+                prediction.timestamp,
                 "%-I:%M%P"
               )
               |> String.trim_trailing("m") %>
@@ -208,7 +212,7 @@ defmodule TideWeb.TideLive do
 
     socket =
       socket
-      |> push_patch(to: ~p"/#{station.id}")
+      |> push_patch(to: ~p"/stations/#{station.id}")
 
     {:noreply, socket}
   end
@@ -219,7 +223,7 @@ defmodule TideWeb.TideLive do
     socket =
       socket
       |> assign(:current_time, new_date)
-      |> push_patch(to: ~p"/#{socket.assigns.station.id}/#{Date.to_iso8601(new_date)}")
+      |> push_patch(to: ~p"/stations/#{socket.assigns.station.id}/#{Date.to_iso8601(new_date)}")
 
     {:noreply, socket}
   end
@@ -230,7 +234,7 @@ defmodule TideWeb.TideLive do
     socket =
       socket
       |> assign(:current_time, new_date)
-      |> push_patch(to: ~p"/#{socket.assigns.station.id}/#{Date.to_iso8601(new_date)}")
+      |> push_patch(to: ~p"/stations/#{socket.assigns.station.id}/#{Date.to_iso8601(new_date)}")
 
     {:noreply, socket}
   end

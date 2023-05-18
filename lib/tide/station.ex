@@ -11,6 +11,8 @@ defmodule Tide.Station do
     field :time_zone_correction, :integer
     field :time_zone_name, :string
     field :distance, :float, virtual: true
+    has_many :predictions, Tide.Prediction
+
   end
 
 def get_stations_by_distance(latitude, longitude) do

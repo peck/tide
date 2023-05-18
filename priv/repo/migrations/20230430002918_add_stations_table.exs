@@ -3,15 +3,14 @@ defmodule Tide.Repo.Migrations.AddStationsTable do
 
   def change do
     create table(:stations, primary_key: false) do
-      add :id, :string, primary_key: true
-      add :name, :string
-      add :latitude, :float
-      add :longitude, :float
-      add :time_zone_correction, :integer
-      add :time_zone_name, :string
-      add :slug, :string
+      add :id, :string, primary_key: true, null: false
+      add :name, :string, null: false
+      add :latitude, :float, null: false
+      add :longitude, :float, null: false
+      add :time_zone_correction, :integer, null: false
+      add :time_zone_name, :string, null: false
     end
 
-    index(:stations, :id)
+    create index(:stations, :id)
   end
 end

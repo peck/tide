@@ -30,7 +30,8 @@ if config_env() == :prod do
 
   config :tide, Tide.Repo,
     database: Path.join(:code.priv_dir(:tide), "tide.db"),
-    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "5")
+    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "5"),
+    journal_mode: :off
 
   config :geoip, provider: :ipinfo, api_key: System.get_env("IP_INFO_IO_TOKEN")
 

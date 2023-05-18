@@ -9,8 +9,9 @@ import Config
 
 config :tide, Tide.Repo,
   database: "priv/tide.db",
-  pool_size: 10,
-  journal_mode: :off
+  pool_size: 10
+
+config :tide, ecto_repos: [Tide.Repo]
 
 # Configures the endpoint
 config :tide, TideWeb.Endpoint,

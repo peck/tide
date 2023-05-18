@@ -18,8 +18,8 @@ defmodule TideWeb.Router do
     pipe_through :browser
     get "/", PageController, :home
     get "/stations", PageController, :stations
-    live "/:station_id", TideLive
-    live "/:station_id/:date", TideLive
+    live "/stations/:station_id", TideLive
+    live "/stations/:station_id/:date", TideLive
     # get "/:station_id", PageController, :home
     # get "/", PageController, :home
   end

@@ -12,7 +12,7 @@
       <%= if index != 0 do %>
         <hr class="w-40 mx-auto my-3" />
       <% end %>
-      <.link href={~p"/#{station.id}/today"}>
+      <.link href={~p"/stations/#{station.id}/today"}>
         <div class="grid grid-cols-2">
           <div>
             <p class="text-left text-sm whitespace-pre-line"> <%= String.split(station.name) |> Enum.map(&String.capitalize/1) |> Enum.join(" ") |> String.replace(", ", ",\n") %> </p>
