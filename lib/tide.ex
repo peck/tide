@@ -32,9 +32,48 @@ defmodule Tide do
     end
   end
 
-  def tide_predictions(station, date = %Date{}) do
-    {:ok, Tide.Prediction.get_predictions(station, date)}
-  end
+  def tide_predictions(station = %Tide.Station{}, date = %Date{}) do
+    url = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter"
+
+    params =
+      %{
+        "begin_date" => Date.add(date, -1) |> Calendar.strftime("%Y%m%d"),
+        "end_date" => Date.add(date, +1) |> Calendar.strftime("%Y%m%d"),
+        "station" => station.id,
+        "product" => "predictions",
+        "datum" => "MLLW",
+        "interval" => "hilo",
+        "units" => "english",
+        "time_zone" => "gmt",
+        "format" => "json"
+      }
+      |> URI.encode_query()
+
+    uri = URI.parse(url)
+
+    uri = %{uri | query: params}
+
+    {_cachex_result, res} =
+      Cachex.fetch(:prediction_cache, uri, fn uri ->
+        req = Finch.build(:get, uri)
+
+        case Finch.request(req, Tide.Finch) do
+          {:ok, %{status: 200, body: body}} ->
+            predictions =
+              body |> Jason.decode!() |> Map.get("predictions") |> Enum.map(&parse_prediction(&1))
+
+            {:commit, {:ok, predictions}}
+
+          {:ok, %{status: code, body: body}} ->
+            {:ignore, {:error, "HTTP error #{code}: #{body}"}}
+
+          {:error, reason} ->
+            {:ignore, {:error, "HTTP error: #{reason}"}}
+        end
+      end)
+
+    res
+    end
 
   def get_nearest_station(latitude, longitude) do
     {:ok,
@@ -191,5 +230,16 @@ defmodule Tide do
       encoded_data = CSV.encode(csv_data)
       Enum.each(encoded_data, &IO.write(file, &1))
       File.close(file)
+  end
+
+  defp parse_prediction(prediction) do
+    {:ok, time, _something} =
+      prediction["t"] |> String.replace(" ", "T") |> Kernel.<>(":00Z") |> DateTime.from_iso8601()
+
+    %Tide.Prediction{
+      timestamp: time,
+      volume: prediction["v"],
+      type: prediction["type"],
+    }
   end
 end

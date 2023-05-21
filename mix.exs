@@ -10,7 +10,7 @@ defmodule Tide.MixProject do
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
-      compilers: [:astronomy] ++ Mix.compilers()
+      compilers: Mix.compilers()
     ]
   end
 

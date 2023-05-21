@@ -24,14 +24,16 @@ defmodule TideWeb.TideLive do
       Tide.get_tide_by_station(station, date)
 
     # warm cache, should just be astronomy but its fine for now until I break that out
-    Task.start(fn ->
-      next_date = Date.add(date, -1)
-      Tide.get_tide_by_station(station, next_date)
-      prev_date = Date.add(date, +1)
-      Tide.get_tide_by_station(station, prev_date)
-    end)
+    #Task.start(fn ->
+    #  next_date = Date.add(date, -1)
+    #  Tide.get_tide_by_station(station, next_date)
+    #  prev_date = Date.add(date, +1)
+    #  Tide.get_tide_by_station(station, prev_date)
+    #end)
+    #
+    {todays_predictions, _not_todays_predictions} = Enum.split_with(predictions, fn(prediction) -> DateTime.to_date(prediction.timestamp) == date end)
 
-    {[yesterday_prediction | todays_predictions], tomorrow_prediction} = Enum.sort(predictions, &(DateTime.compare(&1.timestamp, &2.timestamp) != :gt)) |> Enum.split(-1);
+    # {[yesterday_prediction | todays_predictions], tomorrow_prediction} = Enum.sort(predictions, &(DateTime.compare(&1.timestamp, &2.timestamp) != :gt)) |> Enum.split(-1);
 
     socket =
       socket
@@ -76,14 +78,16 @@ defmodule TideWeb.TideLive do
       Tide.get_tide_by_station(station, date)
 
     # warm cache
-    Task.start(fn ->
-      next_date = Date.add(date, -1)
-      Tide.get_tide_by_station(station, next_date)
-      prev_date = Date.add(date, +1)
-      Tide.get_tide_by_station(station, prev_date)
-    end)
+    #Task.start(fn ->
+    #  next_date = Date.add(date, -1)
+    #  Tide.get_tide_by_station(station, next_date)
+    #  prev_date = Date.add(date, +1)
+    #  Tide.get_tide_by_station(station, prev_date)
+    #end)
 
-    {[yesterday_prediction | todays_predictions], tomorrow_prediction} = Enum.sort(predictions, &(DateTime.compare(&1.timestamp, &2.timestamp) != :gt)) |> Enum.split(-1);
+    {todays_predictions, _not_todays_predictions} = Enum.split_with(predictions, fn(prediction) -> DateTime.to_date(prediction.timestamp) == date end)
+
+    # {[yesterday_prediction | todays_predictions], tomorrow_prediction} = Enum.sort(predictions, &(DateTime.compare(&1.timestamp, &2.timestamp) != :gt)) |> Enum.split(-1);
 
     socket =
       socket
