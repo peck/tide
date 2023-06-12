@@ -2,6 +2,8 @@ defmodule TideWeb.TideLive do
   use Phoenix.LiveView
   use TideWeb, :html
 
+  @placeholder_time "00:00a"
+
   def mount(params = %{"station_id" => station_id}, _session, socket) do
     params =
       set_default_params(params, %{
@@ -20,8 +22,9 @@ defmodule TideWeb.TideLive do
           date
       end
 
-    {:ok, %{predictions: predictions, station: station, events: events}} =
-      Tide.get_tide_by_station(station, date)
+    # {:ok, %{predictions: predictions, station: station, events: events}} =
+
+    Task.async(fn -> Tide.get_tide_by_station(station, date) end)
 
     # warm cache, should just be astronomy but its fine for now until I break that out
     #Task.start(fn ->
@@ -31,19 +34,19 @@ defmodule TideWeb.TideLive do
     #  Tide.get_tide_by_station(station, prev_date)
     #end)
     #
-    {todays_predictions, _not_todays_predictions} = Enum.split_with(predictions, fn(prediction) -> DateTime.to_date(prediction.timestamp) == date end)
+    # {todays_predictions, _not_todays_predictions} = Enum.split_with(predictions, fn(prediction) -> DateTime.to_date(prediction.timestamp) == date end)
 
     # {[yesterday_prediction | todays_predictions], tomorrow_prediction} = Enum.sort(predictions, &(DateTime.compare(&1.timestamp, &2.timestamp) != :gt)) |> Enum.split(-1);
 
     socket =
       socket
-      |> assign(:predictions, todays_predictions)
+      |> assign(:predictions, [])
       |> assign(:station, station)
       |> assign(:current_time, date)
-      |> assign(:sunrise_time, events[:sunrise])
-      |> assign(:sunset_time, events[:sunset])
-      |> assign(:moonrise_time, events[:moonrise])
-      |> assign(:moonset_time, events[:moonset])
+      |> assign(:sunrise_time_str, @placeholder_time)
+      |> assign(:sunset_time_str, @placeholder_time)
+      |> assign(:moonrise_time_str, @placeholder_time)
+      |> assign(:moonset_time_str, @placeholder_time)
       |> assign(:page_title, station.name)
       |> assign(:location, nil)
 
@@ -74,8 +77,8 @@ defmodule TideWeb.TideLive do
           date
       end
 
-    {:ok, %{predictions: predictions, station: station, events: events}} =
-      Tide.get_tide_by_station(station, date)
+    # {:ok, %{predictions: predictions, station: station, events: events}} =
+    #  Tide.get_tide_by_station(station, date)
 
     # warm cache
     #Task.start(fn ->
@@ -85,26 +88,29 @@ defmodule TideWeb.TideLive do
     #  Tide.get_tide_by_station(station, prev_date)
     #end)
 
-    {todays_predictions, _not_todays_predictions} = Enum.split_with(predictions, fn(prediction) -> DateTime.to_date(prediction.timestamp) == date end)
+    # {todays_predictions, _not_todays_predictions} = Enum.split_with(predictions, fn(prediction) -> DateTime.to_date(prediction.timestamp) == date end)
 
     # {[yesterday_prediction | todays_predictions], tomorrow_prediction} = Enum.sort(predictions, &(DateTime.compare(&1.timestamp, &2.timestamp) != :gt)) |> Enum.split(-1);
+    #
+    #Calendar.strftime(@sunrise_time, "%-I:%M%P") |> String.trim_trailing("m")
+    Task.async(fn -> Tide.get_tide_by_station(station, date) end)
 
     socket =
       socket
-      |> assign(:predictions, todays_predictions)
+      |> assign(:predictions, [])
       |> assign(:station, station)
       |> assign(:current_time, date)
-      |> assign(:sunrise_time, events[:sunrise])
-      |> assign(:sunset_time, events[:sunset])
-      |> assign(:moonrise_time, events[:moonrise])
-      |> assign(:moonset_time, events[:moonset])
+      |> assign(:sunrise_time_str, @placeholder_time)
+      |> assign(:sunset_time_str, @placeholder_time)
+      |> assign(:moonrise_time_str, @placeholder_time)
+      |> assign(:moonset_time_str, @placeholder_time)
       |> assign(:page_title, station.name)
       |> assign(:location, nil)
 
     {:noreply, socket}
   end
 
-  def render(assigns) do
+  def not_render(assigns) do
     ~H"""
     <div class="container mx-auto px-1 lg:px-0 flex justify-center min-h-screen dark:bg-slate-900 dark:text-white bg-white text-slate-900 py-5">
       <div class="max-w-screen-lg w-full lg:w-1/4 text-center flex flex-col">
@@ -172,24 +178,22 @@ defmodule TideWeb.TideLive do
           <div class="grid grid-cols-2 gap-4">
             <div>
               <div class="whitespace-nowrap">
-                Sunrise: <%= Calendar.strftime(@sunrise_time, "%-I:%M%P") |> String.trim_trailing("m") %>
+                Sunrise: <%= @sunrise_time_str %>
               </div>
               <div class="whitespace-nowrap">
-                Sunset: <%= Calendar.strftime(@sunset_time, "%-I:%M%P") |> String.trim_trailing("m") %>
+                Sunset: <%= @sunset_time_str %>
               </div>
             </div>
             <div>
-              <%= if @moonset_time != nil do %>
+              <%= if @moonset_time_str != nil do %>
                 <div class="whitespace-nowrap">
-                  Moonset: <%= Calendar.strftime(@moonset_time, "%-I:%M%P")
-                  |> String.trim_trailing("m") %>
+                  Moonset: <%= @moonset_time_str %>
                 </div>
               <% end %>
 
-              <%= if @moonrise_time != nil do %>
+              <%= if @moonrise_time_str != nil do %>
                 <div class="whitespace-nowrap">
-                  Moonrise: <%= Calendar.strftime(@moonrise_time, "%-I:%M%P")
-                  |> String.trim_trailing("m") %>
+                  Moonrise: <%= @moonrise_time_str %>
                 </div>
               <% end %>
             </div>
@@ -242,4 +246,31 @@ defmodule TideWeb.TideLive do
 
     {:noreply, socket}
   end
+
+def handle_info({ref, {:ok, %{predictions: predictions, station: _station, events: events}}}, socket) do
+  Process.demonitor(ref, [:flush])
+  {todays_predictions, _not_todays_predictions} = Enum.split_with(predictions, fn(prediction) -> DateTime.to_date(prediction.timestamp) == socket.assigns.current_time end)
+
+    socket =
+      socket
+      |> assign(:predictions, todays_predictions)
+      |> assign(:sunrise_time_str, events[:sunrise] |> Calendar.strftime("%-I:%M%P") |> String.trim_trailing("m"))
+      |> assign(:sunset_time_str, events[:sunset] |> Calendar.strftime("%-I:%M%P") |> String.trim_trailing("m"))
+
+    socket = if events[:moonrise] do
+      assign(socket, :moonrise_time_str, events[:moonrise] |> Calendar.strftime("%-I:%M%P") |> String.trim_trailing("m"))
+    else
+      socket
+    end
+
+    socket = if events[:moonset] do
+      assign(socket, :moonset_time_str, events[:moonset] |> Calendar.strftime("%-I:%M%P") |> String.trim_trailing("m"))
+    else
+      socket
+    end
+
+
+  {:noreply, socket}
+end
+
 end

@@ -4,6 +4,13 @@
 
 /* This file is for your main application CSS */
 
+@supports (-webkit-touch-callout: none) {
+  .h-screen {
+    height: 100vh;
+    max-height: -webkit-fill-available !important;
+  }
+}
+
 body {
     @apply font-mono;
 }
