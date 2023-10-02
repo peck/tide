@@ -9,7 +9,8 @@ import Config
 
 config :tide, Tide.Repo,
   database: "priv/tide.db",
-  pool_size: 10
+  pool_size: 10,
+  journal_mode: :off
 
 config :tide, ecto_repos: [Tide.Repo]
 
@@ -63,6 +64,12 @@ config :logger, :console,
 config :phoenix, :json_library, Jason
 
 config :elixir, :time_zone_database, Tz.TimeZoneDatabase
+
+config :tide, stations_per_request: 10
+
+#config :tz_world,
+  # The default is the `priv` directory of `:tz_world`
+  #data_dir: "priv/tz_world_data"
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

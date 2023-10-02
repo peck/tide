@@ -11,17 +11,17 @@
 # and so on) as they will fail if something goes wrong.
 
 {:ok, _tz_world_pid} = TzWorld.Backend.EtsWithIndexCache.start_link()
-Tide.populate_stations
+Tide.populate_stations()
 
-#for station <- Tide.Repo.all(Tide.Station) do
+# for station <- Tide.Repo.all(Tide.Station) do
 #    if !File.exists?("priv/predictions/#{station.id}.json") do
 #      {:ok, predictions} = Tide.tide_predictions(station.id, ~D[2023-01-01])
 #      json_data = Jason.encode_to_iodata!(predictions)
 #      File.write!("priv/predictions/#{station.id}.json", json_data)
 #    end
-#end
+# end
 
-#for file_name <- File.ls!("priv/predictions/") do
+# for file_name <- File.ls!("priv/predictions/") do
 #    [station_id, _extension] = String.split(file_name, ".")
 #
 #    changesets = File.read!("priv/predictions/#{file_name}")
@@ -42,4 +42,4 @@ Tide.populate_stations
 #    Tide.Repo.transaction(fn ->
 #      Enum.each(changesets, fn cs -> Tide.Repo.insert(cs) end)
 #    end)
-#end
+# end

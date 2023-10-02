@@ -5,7 +5,7 @@ import Config
 # The MIX_TEST_PARTITION environment variable can be used
 # to provide built-in test partitioning in CI environment.
 # Run `mix help test` for more information.
-#config :tide, Tide.Repo,
+# config :tide, Tide.Repo,
 #  database: Path.expand("../priv/tide_test.db", Path.dirname(__ENV__.file)),
 #  pool_size: 5,
 #  pool: Ecto.Adapters.SQL.Sandbox

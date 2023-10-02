@@ -1,5 +1,5 @@
 defmodule TideWeb.Helpers.ViewHelpers do
-    @miles_per_meter 0.000621371
+  @miles_per_meter 0.000621371
 
   def meters_to_miles(meters) do
     # Convert meters to miles

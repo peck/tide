@@ -15,7 +15,12 @@
       <.link href={~p"/stations/#{station.id}/today"}>
         <div class="grid grid-cols-2">
           <div>
-            <p class="text-left text-sm whitespace-pre-line"> <%= String.split(station.name) |> Enum.map(&String.capitalize/1) |> Enum.join(" ") |> String.replace(", ", ",\n") %> </p>
+            <p class="text-left text-sm whitespace-pre-line">
+              <%= String.split(station.name)
+              |> Enum.map(&String.capitalize/1)
+              |> Enum.join(" ")
+              |> String.replace(", ", ",\n") %>
+            </p>
           </div>
           <div class="text-sm text-right">
             <%= decimal_degrees_to_dms(station.latitude, :latitude) %>
@@ -23,7 +28,7 @@
             <%= decimal_degrees_to_dms(station.longitude, :longitude) %>
           </div>
         </div>
-<div class="text-sm text-center"><%= meters_to_miles(station.distance) %> miles away</div>
+        <div class="text-sm text-center"><%= meters_to_miles(station.distance) %> miles away</div>
       </.link>
     <% end %>
   </div>

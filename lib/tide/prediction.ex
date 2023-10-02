@@ -3,7 +3,6 @@ defmodule Tide.Prediction do
   import Ecto.Changeset
   @primary_key {:id, :string, autogenerate: false}
 
-
   schema "predictions" do
     belongs_to :station, Tide.Station, type: :string
     field :timestamp, :utc_datetime
@@ -21,6 +20,7 @@ defmodule Tide.Prediction do
 
   def get_predictions(station = %Tide.Station{}, date = %Date{}) do
     {:ok, offset} = offset_for_date(date, station.time_zone_name)
+
     sql = """
     SELECT *
     FROM (
@@ -95,16 +95,17 @@ defmodule Tide.Prediction do
     ORDER BY t.timestamp;
     """
 
-    {:ok, result} =Tide.Repo.query(sql, [date, station.id])
+    {:ok, result} = Tide.Repo.query(sql, [date, station.id])
     Enum.map(result.rows, &Tide.Repo.load(Tide.Prediction, {result.columns, &1}))
   end
 
   def offset_for_date(date, timezone) do
     {:ok, naive_datetime} = NaiveDateTime.new(date, ~T[00:00:00])
+
     DateTime.from_naive(naive_datetime, timezone)
     |> case do
-         {:ok, datetime} -> {:ok, (datetime.utc_offset + datetime.std_offset)/3600}
-         {:error, _} -> {:error, "Invalid timezone or date"}
-       end
+      {:ok, datetime} -> {:ok, (datetime.utc_offset + datetime.std_offset) / 3600}
+      {:error, _} -> {:error, "Invalid timezone or date"}
+    end
   end
 end

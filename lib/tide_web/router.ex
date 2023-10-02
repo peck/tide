@@ -16,8 +16,8 @@ defmodule TideWeb.Router do
 
   scope "/", TideWeb do
     pipe_through :browser
-    get "/", PageController, :home
-    get "/stations", PageController, :stations
+    live "/", TideLive
+    live "/stations", StationLive
     live "/stations/:station_id", TideLive
     live "/stations/:station_id/:date", TideLive
     # get "/:station_id", PageController, :home

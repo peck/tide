@@ -11,15 +11,15 @@ defmodule Tide.Application do
       # Start the Telemetry supervisor
       TideWeb.Telemetry,
       # Start the TZWorld backend
-      # TzWorld.Backend.EtsWithIndexCache,
+      #TzWorld.Backend.DetsWithIndexCache,
       # Start the Ecto repository
       Tide.Repo,
       # Start the PubSub system
       {Phoenix.PubSub, name: Tide.PubSub},
       # Start Finch
-      {Finch, name: Tide.Finch},
+      # {Finch, name: Tide.Finch},
       # Start the Cache
-      {Cachex, name: :prediction_cache, limit: 1000},
+      # {Cachex, name: :prediction_cache, limit: 1000},
       # Start the Endpoint (http/https)
       TideWeb.Endpoint
       # Start a worker by calling: Tide.Worker.start_link(arg)

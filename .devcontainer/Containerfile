@@ -1,0 +1,23 @@
+FROM mcr.microsoft.com/devcontainers/base:bookworm
+
+RUN apt-get update \
+    && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get install -y \
+    git \
+    curl \
+    unzip \
+    build-essential \
+    autoconf \
+    libncurses5-dev \
+    inotify-tools
+
+RUN git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.13.0 \ 
+&& echo ". "$HOME/.asdf/asdf.sh"" > ~/.bashrc \
+&& echo ". "$HOME/.asdf/completions/asdf.bash"" >> ~/.bashrc
+
+COPY .tool-versions .
+COPY .tool-versions /root/.tool-versions
+
+RUN bash -i -c 'asdf plugin-add elixir https://github.com/asdf-vm/asdf-elixir.git' \
+&& bash -i -c 'asdf plugin add erlang https://github.com/asdf-vm/asdf-erlang.git' \
+&& bash -i -c 'asdf install'

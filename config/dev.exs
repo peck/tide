@@ -1,8 +1,8 @@
 import Config
 
 # Configure your database
-#config :tide, Tide.Repo,
-#  database: Path.expand("../prive/tide_dev.db", Path.dirname(__ENV__.file)),
+# config :tide, Tide.Repo,
+#  database: Path.expand("../priv/tide_dev.db", Path.dirname(__ENV__.file)),
 #  pool_size: 5,
 #  stacktrace: true,
 #  show_sensitive_data_on_connection_error: true
@@ -64,7 +64,6 @@ config :tide, dev_routes: true
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"
-
 
 # Set a higher stacktrace during development. Avoid configuring such
 # in production as building large stacktraces may be expensive.

@@ -21,7 +21,7 @@ if System.get_env("PHX_SERVER") do
 end
 
 if config_env() == :prod do
-  #database_path =
+  # database_path =
   #  System.get_env("DATABASE_PATH") ||
   #    raise """
   #    environment variable DATABASE_PATH is missing.

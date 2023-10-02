@@ -1,5 +1,4 @@
 defmodule Tide do
-  require Finch
   require Logger
   import Ecto.Query
 
@@ -22,9 +21,13 @@ defmodule Tide do
         end)
         |> Enum.into(%{})
 
-      predictions = Enum.map(predictions, fn(prediction) ->
-                                            %{prediction | timestamp: DateTime.shift_zone!(prediction.timestamp, station.time_zone_name)}
-                                            end)
+      predictions =
+        Enum.map(predictions, fn prediction ->
+          %{
+            prediction
+            | timestamp: DateTime.shift_zone!(prediction.timestamp, station.time_zone_name)
+          }
+        end)
 
       {:ok, %{station: station, predictions: predictions, events: events}}
     else
@@ -36,51 +39,39 @@ defmodule Tide do
     url = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter"
 
     params =
-      %{
-        "begin_date" => Date.add(date, -1) |> Calendar.strftime("%Y%m%d"),
-        "end_date" => Date.add(date, +1) |> Calendar.strftime("%Y%m%d"),
-        "station" => station.id,
-        "product" => "predictions",
-        "datum" => "MLLW",
-        "interval" => "hilo",
-        "units" => "english",
-        "time_zone" => "gmt",
-        "format" => "json"
-      }
-      |> URI.encode_query()
+      [
+        begin_date: Date.add(date, -1) |> Calendar.strftime("%Y%m%d"),
+        end_date: Date.add(date, +1) |> Calendar.strftime("%Y%m%d"),
+        station: station.id,
+        product: "predictions",
+        datum: "MLLW",
+        interval: "hilo",
+        units: "english",
+        time_zone: "gmt",
+        format: "json"
+      ]
 
-    uri = URI.parse(url)
+    case Req.get(url, params: params) do
+      {:ok, %{status: 200, body: body}} ->
+        predictions =
+          body |> Map.get("predictions") |> Enum.map(&parse_prediction(&1))
 
-    uri = %{uri | query: params}
+        {:ok, predictions}
 
-    {_cachex_result, res} =
-      Cachex.fetch(:prediction_cache, uri, fn uri ->
-        req = Finch.build(:get, uri)
+      {:ok, %{status: code, body: body}} ->
+        {:error, "HTTP error #{code}: #{body}"}
 
-        case Finch.request(req, Tide.Finch) do
-          {:ok, %{status: 200, body: body}} ->
-            predictions =
-              body |> Jason.decode!() |> Map.get("predictions") |> Enum.map(&parse_prediction(&1))
-
-            {:commit, {:ok, predictions}}
-
-          {:ok, %{status: code, body: body}} ->
-            {:ignore, {:error, "HTTP error #{code}: #{body}"}}
-
-          {:error, reason} ->
-            {:ignore, {:error, "HTTP error: #{reason}"}}
-        end
-      end)
-
-    res
+      {:error, reason} ->
+        {:error, "HTTP error: #{reason}"}
     end
+  end
 
   def get_nearest_station(latitude, longitude) do
     {:ok,
      Tide.Station
      |> order_by([s],
-     asc:
-     fragment("abs(?)", s.latitude - ^latitude) + fragment("abs(?)", s.longitude - ^longitude)
+       asc:
+         fragment("abs(?)", s.latitude - ^latitude) + fragment("abs(?)", s.longitude - ^longitude)
      )
      |> limit(1)
      |> Tide.Repo.one()}
@@ -114,21 +105,14 @@ defmodule Tide do
     url = "https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations.json"
 
     params =
-      %{
-        "type" => "tidepredictions",
-        "units" => "english"
-      }
-      |> URI.encode_query()
+      [
+        type: "tidepredictions",
+        units: "english"
+      ]
 
-    uri = URI.parse(url)
-
-    uri = %{uri | query: params}
-
-    req = Finch.build(:get, uri)
-
-    case Finch.request(req, Tide.Finch) do
+    case Req.get(url, params: params) do
       {:ok, %{status: 200, body: body}} ->
-        {:ok, body |> Jason.decode!() |> Map.get("stations") |> Enum.map(&parse_station/1)}
+        {:ok, body |> Map.get("stations") |> Enum.map(&parse_station/1)}
 
       {:ok, %{status: code, body: body}} ->
         {:error, "HTTP error #{code}: #{body}"}
@@ -142,64 +126,46 @@ defmodule Tide do
     url = "https://aa.usno.navy.mil/api/rstt/oneday"
 
     params =
-      %{
-        "date" => Calendar.strftime(date, "%Y-%m-%d"),
-        "coords" => "#{latitude},#{longitude}"
-      }
-      |> URI.encode_query()
+      [
+        date: Calendar.strftime(date, "%Y-%m-%d"),
+        coords: "#{latitude},#{longitude}"
+      ]
 
-    uri = URI.parse(url)
+    case Req.get(url, params: params) do
+      {:ok, %{status: 200, body: body}} ->
+        res = body |> parse_astronomy
 
-    uri = %{uri | query: params}
+        events =
+          for {key, value} <- res do
+            datetime_str = "#{Calendar.strftime(date, "%Y-%m-%d")}T#{value}:00Z"
+            {:ok, datetime, _} = DateTime.from_iso8601(datetime_str)
+            {key, datetime}
+          end
+          |> Map.new()
 
-    {_cachex_result, res} =
-      Cachex.fetch(:prediction_cache, uri, fn uri ->
-        req = Finch.build(:get, uri)
-
-        case Finch.request(req, Tide.Finch) do
-          {:ok, %{status: 200, body: body}} ->
-            res = body |> Jason.decode!() |> parse_astronomy
-
-            events =
-            for {key, value} <- res do
-              datetime_str = "#{Calendar.strftime(date, "%Y-%m-%d")}T#{value}:00Z"
-              {:ok, datetime, _} = DateTime.from_iso8601(datetime_str)
-              {key, datetime}
-            end
-            |> Map.new()
-
-            {:commit, {:ok, events}}
-
-          {:ok, %{status: code, body: body}} ->
-            {:ignore, {:error, "HTTP error #{code}: #{body}"}}
-
-          {:error, reason} ->
-            {:ignore, {:error, "HTTP error: #{reason}"}}
-        end
-      end)
-
-    res
+        {:ok, events}
+    end
   end
 
   # Parse the sunrise, sunset, moonrise, and moonset times and convert to DateTime
   defp parse_astronomy(response) do
     %{
       sunrise:
-      get_in(response, ["properties", "data", "sundata"])
-      |> Enum.find(fn x -> x["phen"] == "Rise" end)
-      |> Map.get("time"),
+        get_in(response, ["properties", "data", "sundata"])
+        |> Enum.find(fn x -> x["phen"] == "Rise" end)
+        |> Map.get("time"),
       sunset:
-      get_in(response, ["properties", "data", "sundata"])
-      |> Enum.find(fn x -> x["phen"] == "Set" end)
-      |> Map.get("time"),
+        get_in(response, ["properties", "data", "sundata"])
+        |> Enum.find(fn x -> x["phen"] == "Set" end)
+        |> Map.get("time"),
       moonrise:
-      get_in(response, ["properties", "data", "moondata"])
-      |> Enum.find(%{}, fn x -> x["phen"] == "Rise" end)
-      |> Map.get("time"),
+        get_in(response, ["properties", "data", "moondata"])
+        |> Enum.find(%{}, fn x -> x["phen"] == "Rise" end)
+        |> Map.get("time"),
       moonset:
-      get_in(response, ["properties", "data", "moondata"])
-      |> Enum.find(%{}, fn x -> x["phen"] == "Set" end)
-      |> Map.get("time")
+        get_in(response, ["properties", "data", "moondata"])
+        |> Enum.find(%{}, fn x -> x["phen"] == "Set" end)
+        |> Map.get("time")
     }
     |> Enum.reject(fn {_key, value} -> value == nil end)
     |> Enum.into(%{})
@@ -217,19 +183,19 @@ defmodule Tide do
 
   def encode_to_csv(tide_data, file_path) do
     # Convert the tide data to a list of lists (i.e., rows of CSV data)
-    csv_data = 
-      tide_data 
-      |> Enum.map(fn %{"t" => datetime, "type" => tide_type, "v" => level} -> 
-      [DateTime.to_string(datetime), tide_type, level] 
-    end)
+    csv_data =
+      tide_data
+      |> Enum.map(fn %{"t" => datetime, "type" => tide_type, "v" => level} ->
+        [DateTime.to_string(datetime), tide_type, level]
+      end)
 
-      # Add header row
-      csv_data = [["datetime", "tide_type", "level"]] ++ csv_data
+    # Add header row
+    csv_data = [["datetime", "tide_type", "level"]] ++ csv_data
 
-      {:ok, file} = File.open(file_path, [:write])
-      encoded_data = CSV.encode(csv_data)
-      Enum.each(encoded_data, &IO.write(file, &1))
-      File.close(file)
+    {:ok, file} = File.open(file_path, [:write])
+    encoded_data = CSV.encode(csv_data)
+    Enum.each(encoded_data, &IO.write(file, &1))
+    File.close(file)
   end
 
   defp parse_prediction(prediction) do
@@ -239,7 +205,7 @@ defmodule Tide do
     %Tide.Prediction{
       timestamp: time,
       volume: prediction["v"],
-      type: prediction["type"],
+      type: prediction["type"]
     }
   end
 end

@@ -12,58 +12,89 @@ defmodule Tide.Station do
     field :time_zone_name, :string
     field :distance, :float, virtual: true
     has_many :predictions, Tide.Prediction
-
   end
 
-def get_stations_by_distance(latitude, longitude) do
-  query = """
-  SELECT *,
-    (
-      6371000 * acos(
-        cos((? * 1.0 * pi() / 180)) *
-        cos((latitude * 1.0 * pi() / 180)) *
-        cos((longitude * 1.0 * pi() / 180) - (? * 1.0 * pi() / 180)) +
-        sin((? * 1.0 * pi() / 180)) *
-        sin((latitude * 1.0 * pi() / 180))
-      )
-    ) AS distance
-  FROM stations
-  ORDER BY distance;
-  """
-  Tide.Repo.query(query, [latitude, longitude, latitude])
+  def get_stations_by_distance(latitude, longitude, limit \\ 10, offset \\ 0) do
+    query = """
+    SELECT *,
+      (
+        6371000 * acos(
+          cos((? * 1.0 * pi() / 180)) *
+          cos((latitude * 1.0 * pi() / 180)) *
+          cos((longitude * 1.0 * pi() / 180) - (? * 1.0 * pi() / 180)) +
+          sin((? * 1.0 * pi() / 180)) *
+          sin((latitude * 1.0 * pi() / 180))
+        )
+      ) AS distance
+    FROM stations
+    ORDER BY distance
+    LIMIT ?
+    OFFSET ?;
+    """
 
-  case Tide.Repo.query(query, [latitude, longitude, latitude]) do
-    {:ok, result} ->
-      {:ok, Enum.map(result.rows, &Tide.Repo.load(Tide.Station.__schema__(:load) |> Enum.into(%{distance: :float}), {result.columns, &1}))}
-    {:error, error} ->
-      {:error, error}
+    #Tide.Repo.query(query, [latitude, longitude, latitude])
+
+    case Tide.Repo.query(query, [latitude, longitude, latitude, limit, offset]) do
+      {:ok, result} ->
+        {:ok,
+         Enum.map(
+           result.rows,
+           &Tide.Repo.load(
+             Tide.Station.__schema__(:load) |> Enum.into(%{distance: :float}),
+             {result.columns, &1}
+           )
+         )}
+
+      {:error, error} ->
+        {:error, error}
+    end
   end
-end
-
 
   def get_stations(%{latitude: latitude, longitude: longitude}) do
-    q = from s in Tide.Station,
-    order_by: [asc: fragment("""
-      6371000 * acos(
-        cos((? * 1.0 * pi() / 180)) *
-        cos((? * 1.0 * pi() / 180)) *
-        cos((? * 1.0 * pi() / 180) - (? * 1.0 * pi() / 180)) +
-        sin((? * 1.0 * pi() / 180)) *
-        sin((? * 1.0 * pi() / 180))
-      )
-    """, ^latitude, s.latitude, s.longitude, ^longitude, ^longitude, s.latitude) ],
-    select: %{
-      name: s.name,
-      distance: fragment("""
-      6371000 * acos(
-        cos((? * 1.0 * pi() / 180)) *
-        cos((? * 1.0 * pi() / 180)) *
-        cos((? * 1.0 * pi() / 180) - (? * 1.0 * pi() / 180)) +
-        sin((? * 1.0 * pi() / 180)) *
-        sin((? * 1.0 * pi() / 180))
-      )
-    """, ^latitude, s.latitude, s.longitude, ^longitude, ^longitude, s.latitude) |> selected_as(:distance)
-      }
+    q =
+      from s in Tide.Station,
+        order_by: [
+          asc:
+            fragment(
+              """
+                6371000 * acos(
+                  cos((? * 1.0 * pi() / 180)) *
+                  cos((? * 1.0 * pi() / 180)) *
+                  cos((? * 1.0 * pi() / 180) - (? * 1.0 * pi() / 180)) +
+                  sin((? * 1.0 * pi() / 180)) *
+                  sin((? * 1.0 * pi() / 180))
+                )
+              """,
+              ^latitude,
+              s.latitude,
+              s.longitude,
+              ^longitude,
+              ^longitude,
+              s.latitude
+            )
+        ],
+        select: %{
+          name: s.name,
+          distance:
+            fragment(
+              """
+                6371000 * acos(
+                  cos((? * 1.0 * pi() / 180)) *
+                  cos((? * 1.0 * pi() / 180)) *
+                  cos((? * 1.0 * pi() / 180) - (? * 1.0 * pi() / 180)) +
+                  sin((? * 1.0 * pi() / 180)) *
+                  sin((? * 1.0 * pi() / 180))
+                )
+              """,
+              ^latitude,
+              s.latitude,
+              s.longitude,
+              ^longitude,
+              ^longitude,
+              s.latitude
+            )
+            |> selected_as(:distance)
+        }
 
     Tide.Repo.all(q)
   end
